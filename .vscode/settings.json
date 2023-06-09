@@ -4,5 +4,9 @@
     "cSpell.words": [
         "autoscale",
         "microsteps"
-    ]
+    ],
+    "files.associations": {
+        "*.doxyfile": "shellscript",
+        "iterator": "cpp"
+    }
 }
