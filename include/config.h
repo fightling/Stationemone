@@ -1,6 +1,6 @@
 #include "Stepper.h"
 
-Stepper::Parameters params = {
+constexpr Stepper::Parameters params = {
     .max_speed = 1000.0,
     .acceleration = 200.0,
     .rms_current = 800,
