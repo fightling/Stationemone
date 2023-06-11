@@ -8,8 +8,6 @@ Artnet::Client<1> artnet(paramsArtnet);
 enum Move
 {
   Auto = 0,
-  In = 1,
-  Out = 2,
   Position = 3,
 };
 
@@ -36,14 +34,6 @@ void loop()
       case Auto:
         Serial.println("auto move");
         stepper.auto_move();
-        break;
-      case In:
-        Serial.println("move in");
-        stepper.move_in();
-        break;
-      case Out:
-        Serial.println("move out");
-        stepper.move_out();
         break;
       case Position:
         Serial.println("position");

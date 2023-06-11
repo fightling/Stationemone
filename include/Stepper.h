@@ -41,7 +41,6 @@ namespace Stepper
         PAUSE_OUT,
         PAUSING_IN,
         PAUSING_OUT,
-        MANUAL,
     };
 
     struct Controller
@@ -51,8 +50,7 @@ namespace Stepper
               stepper(stepper.DRIVER, STEP_PIN, DIR_PIN),
               params(params),
               stage(MOVE_IN),
-              auto_mode(true),
-              position_mode(false)
+              auto_mode(true)
         {
         }
 
@@ -127,37 +125,21 @@ namespace Stepper
             }
         }
 
-        void move_in()
-        {
-            auto_mode = false;
-            position_mode = false;
-            stage = MOVE_IN;
-        }
-
-        void move_out()
-        {
-            auto_mode = false;
-            position_mode = false;
-            stage = MOVE_OUT;
-        }
-
         void auto_move()
         {
             auto_mode = true;
-            position_mode = false;
             stage = MOVE_OUT;
         }
 
         void position_move()
         {
             auto_mode = false;
-            position_mode = true;
             stage = MOVE_OUT;
         }
 
         void set_position(uint8_t pos)
         {
-            if (position_mode)
+            if (!auto_mode)
             {
                 position = params.distance_mm * params.steps_per_mm * (float)(255.0 - pos) / 255.0;
                 stepper.disableOutputs();
@@ -175,7 +157,6 @@ namespace Stepper
         Stage stage;
         unsigned long until;
         bool auto_mode;
-        bool position_mode;
         float position;
     };
 }
