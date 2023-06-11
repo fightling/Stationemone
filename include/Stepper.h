@@ -87,7 +87,7 @@ namespace Stepper
                 break;
             case MOVING_IN:
                 if (stepper.currentPosition() == params.distance_mm * params.steps_per_mm)
-                    stage = PAUSE_OUT;
+                    stage = PAUSE_IN;
                 break;
             case MOVING_OUT:
                 if (stepper.currentPosition() == 0)
@@ -95,9 +95,11 @@ namespace Stepper
                 break;
             case PAUSE_IN:
                 delay(random(params.pause_in[0], params.pause_in[1]));
+                stage = MOVE_OUT;
                 break;
             case PAUSE_OUT:
                 delay(random(params.pause_out[0], params.pause_out[1]));
+                stage = MOVE_IN;
                 break;
             }
             stepper.run();
