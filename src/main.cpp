@@ -31,7 +31,6 @@ void loop()
   {
     if (last[0] != data[0])
     {
-      Serial.println(data[0]);
       switch (data[0])
       {
       case Auto:
