@@ -30,12 +30,14 @@ namespace Stepper
 
     enum Stage
     {
-        MOVE_OUT = -3,
-        MOVING_OUT = -2,
-        PAUSE_OUT = -1,
-        MOVE_IN = 1,
-        MOVING_IN = 2,
-        PAUSE_IN = 3
+        MOVE_IN,
+        MOVE_OUT,
+        MOVING_IN,
+        MOVING_OUT,
+        PAUSE_IN,
+        PAUSE_OUT,
+        PAUSING_IN,
+        PAUSING_OUT
     };
 
     struct Controller
@@ -88,21 +90,30 @@ namespace Stepper
             case MOVING_IN:
                 if (stepper.currentPosition() == params.distance_mm * params.steps_per_mm)
                     stage = PAUSE_IN;
+                stepper.run();
                 break;
             case MOVING_OUT:
                 if (stepper.currentPosition() == 0)
                     stage = PAUSE_OUT;
+                stepper.run();
                 break;
             case PAUSE_IN:
-                delay(random(params.pause_in[0], params.pause_in[1]));
-                stage = MOVE_OUT;
+                until = millis() + random(params.pause_in[0], params.pause_in[1]);
+                stage = PAUSING_IN;
                 break;
             case PAUSE_OUT:
                 delay(random(params.pause_out[0], params.pause_out[1]));
-                stage = MOVE_IN;
+                stage = PAUSING_OUT;
+                break;
+            case PAUSING_IN:
+                if (millis() > until)
+                    stage = MOVE_OUT;
+                break;
+            case PAUSING_OUT:
+                if (millis() > until)
+                    stage = MOVE_IN;
                 break;
             }
-            stepper.run();
         }
 
     private:
@@ -110,6 +121,7 @@ namespace Stepper
         TMC2130Stepper driver;
         AccelStepper stepper;
         Stage stage;
+        unsigned long until;
     };
 }
 
