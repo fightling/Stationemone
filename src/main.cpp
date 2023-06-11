@@ -5,7 +5,7 @@ Stepper::Controller stepper(params);
 
 void setup()
 {
-  stepper.init();
+  stepper.setup();
 }
 
 void loop()

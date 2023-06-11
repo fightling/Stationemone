@@ -28,10 +28,14 @@ namespace Stepper
         uint16_t speed_out;
     };
 
-    enum Direction
+    enum Stage
     {
-        DIR_OUT = -1,
-        DIR_IN = 1
+        MOVE_OUT = -3,
+        MOVING_OUT = -2,
+        PAUSE_OUT = -1,
+        MOVE_IN = 1,
+        MOVING_IN = 2,
+        PAUSE_IN = 3
     };
 
     struct Controller
@@ -40,11 +44,11 @@ namespace Stepper
             : driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK),
               stepper(stepper.DRIVER, STEP_PIN, DIR_PIN),
               params(params),
-              dir(DIR_OUT)
+              stage(MOVE_IN)
         {
         }
 
-        void init()
+        void setup()
         {
             pinMode(STEP_PIN, OUTPUT);
             pinMode(DIR_PIN, OUTPUT);
@@ -65,23 +69,36 @@ namespace Stepper
 
         void loop()
         {
-            if (stepper.currentPosition() <= 0 && dir != DIR_IN)
+            switch (stage)
             {
-                dir = DIR_IN;
+            case MOVE_IN:
                 stepper.disableOutputs();
-                delay(random(params.pause_out[0], params.pause_out[1]));
                 stepper.setMaxSpeed(params.speed_in * params.steps_per_mm);
                 stepper.moveTo(params.distance_mm * params.steps_per_mm);
                 stepper.enableOutputs();
-            }
-            else if (stepper.currentPosition() >= params.distance_mm * params.steps_per_mm && dir != DIR_OUT)
-            {
-                dir = DIR_OUT;
+                stage = MOVING_IN;
+                break;
+            case MOVE_OUT:
                 stepper.disableOutputs();
-                delay(random(params.pause_in[0], params.pause_in[1]));
                 stepper.setMaxSpeed(params.speed_out * params.steps_per_mm);
                 stepper.moveTo(0 * params.steps_per_mm);
                 stepper.enableOutputs();
+                stage = MOVING_OUT;
+                break;
+            case MOVING_IN:
+                if (stepper.currentPosition() == params.distance_mm * params.steps_per_mm)
+                    stage = PAUSE_OUT;
+                break;
+            case MOVING_OUT:
+                if (stepper.currentPosition() == 0)
+                    stage = PAUSE_OUT;
+                break;
+            case PAUSE_IN:
+                delay(random(params.pause_in[0], params.pause_in[1]));
+                break;
+            case PAUSE_OUT:
+                delay(random(params.pause_out[0], params.pause_out[1]));
+                break;
             }
             stepper.run();
         }
@@ -90,7 +107,7 @@ namespace Stepper
         const Parameters &params;
         TMC2130Stepper driver;
         AccelStepper stepper;
-        int dir;
+        Stage stage;
     };
 }
 
