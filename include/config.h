@@ -1,6 +1,13 @@
+#include "net_config.h"
 #include "Stepper.h"
+#include "Artnet.h"
 
-constexpr Stepper::Parameters params = {
+#ifndef SSID
+#define SSID "ssid"
+#define PASSWORD "password"
+#endif
+
+constexpr Stepper::Parameters paramsStepper = {
     .max_speed = 1000.0,
     .acceleration = 200.0,
     .rms_current = 800,
@@ -10,4 +17,11 @@ constexpr Stepper::Parameters params = {
     .pause_out = {0, 30000},   //  (min/max)
     .speed_in = 800,
     .speed_out = 2,
+};
+
+constexpr Artnet::Parameters paramsArtnet = {
+    .ssid = SSID,
+    .password = PASSWORD,
+    .universe = 0,
+    .first = 0,
 };

@@ -30,6 +30,9 @@ namespace Stepper
 
     enum Stage
     {
+        MOVING_TO,
+        HALT,
+        PAUSE_TO,
         MOVE_IN,
         MOVE_OUT,
         MOVING_IN,
@@ -37,7 +40,8 @@ namespace Stepper
         PAUSE_IN,
         PAUSE_OUT,
         PAUSING_IN,
-        PAUSING_OUT
+        PAUSING_OUT,
+        MANUAL,
     };
 
     struct Controller
@@ -46,7 +50,9 @@ namespace Stepper
             : driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK),
               stepper(stepper.DRIVER, STEP_PIN, DIR_PIN),
               params(params),
-              stage(MOVE_IN)
+              stage(MOVE_IN),
+              auto_mode(true),
+              position_mode(false)
         {
         }
 
@@ -73,6 +79,11 @@ namespace Stepper
         {
             switch (stage)
             {
+            case MOVING_TO:
+                if (stepper.currentPosition() == position)
+                    stage = HALT;
+                stepper.run();
+                break;
             case MOVE_IN:
                 stepper.disableOutputs();
                 stepper.setMaxSpeed(params.speed_in * params.steps_per_mm);
@@ -102,17 +113,58 @@ namespace Stepper
                 stage = PAUSING_IN;
                 break;
             case PAUSE_OUT:
-                delay(random(params.pause_out[0], params.pause_out[1]));
+                until = millis() + random(params.pause_in[0], params.pause_in[1]);
                 stage = PAUSING_OUT;
                 break;
             case PAUSING_IN:
-                if (millis() > until)
+                if (auto_mode && millis() > until)
                     stage = MOVE_OUT;
                 break;
             case PAUSING_OUT:
-                if (millis() > until)
+                if (auto_mode && millis() > until)
                     stage = MOVE_IN;
                 break;
+            }
+        }
+
+        void move_in()
+        {
+            auto_mode = false;
+            position_mode = false;
+            stage = MOVE_IN;
+        }
+
+        void move_out()
+        {
+            auto_mode = false;
+            position_mode = false;
+            stage = MOVE_OUT;
+        }
+
+        void auto_move()
+        {
+            auto_mode = true;
+            position_mode = false;
+            stage = MOVE_OUT;
+        }
+
+        void position_move()
+        {
+            auto_mode = false;
+            position_mode = true;
+            stage = MOVE_OUT;
+        }
+
+        void set_position(uint8_t pos)
+        {
+            if (position_mode)
+            {
+                position = params.distance_mm * params.steps_per_mm * (float)(255.0 - pos) / 255.0;
+                stepper.disableOutputs();
+                stepper.setMaxSpeed(params.speed_in * params.steps_per_mm);
+                stepper.moveTo(position);
+                stepper.enableOutputs();
+                stage = MOVING_TO;
             }
         }
 
@@ -122,6 +174,9 @@ namespace Stepper
         AccelStepper stepper;
         Stage stage;
         unsigned long until;
+        bool auto_mode;
+        bool position_mode;
+        float position;
     };
 }
 

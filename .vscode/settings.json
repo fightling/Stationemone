@@ -2,11 +2,16 @@
     "git-blame.gitWebUrl": "",
     "cmake.configureOnOpen": false,
     "cSpell.words": [
+        "artnet",
         "autoscale",
-        "microsteps"
+        "microsteps",
+        "SSID"
     ],
     "files.associations": {
         "*.doxyfile": "shellscript",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     }
 }
