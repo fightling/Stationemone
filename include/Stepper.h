@@ -4,12 +4,12 @@
 #include <TMCStepper.h>
 #include <AccelStepper.h>
 
-#define STEP_PIN 14 // Step slope
-#define DIR_PIN 12  // Direction
-#define CS_PIN 5    // Chip select
-#define SW_MOSI 23  // Software Master Out Slave In (MOSI)
-#define SW_MISO 19  // Software Master In Slave Out (MISO)
-#define SW_SCK 18   // Software Slave Clock (SCK)
+#define STEP_PIN 4 // Step slope
+#define DIR_PIN 16 // Direction
+#define CS_PIN 5   // Chip select
+#define SW_MOSI 17 // Software Master Out Slave In (MOSI)
+#define SW_MISO 19 // Software Master In Slave Out (MISO)
+#define SW_SCK 18  // Software Slave Clock (SCK)
 
 #define R_SENSE 0.11f // Match to your driver
 
