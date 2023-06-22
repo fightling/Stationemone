@@ -56,9 +56,9 @@ namespace Stepper
 
         void setup()
         {
-            pinMode(STEP_PIN, OUTPUT);
-            pinMode(DIR_PIN, OUTPUT);
-            pinMode(SW_MISO, INPUT_PULLUP);
+            setPinMode(STEP_PIN, OUTPUT);
+            setPinMode(DIR_PIN, OUTPUT);
+            setPinMode(SW_MISO, INPUT_PULLUP);
 
             driver.begin();                         //  SPI: Init CS pins and possible SW SPI pins
                                                     //  driver.push();
@@ -137,17 +137,36 @@ namespace Stepper
             stage = MOVE_OUT;
         }
 
-        void set_position(uint8_t pos)
+        void set_position(uint8_t pos, uint8_t speed, uint8_t acceleration)
         {
             if (!auto_mode)
             {
                 position = params.distance_mm * params.steps_per_mm * (float)(255.0 - pos) / 255.0;
+
+                float f_speed = params.speed_in * params.steps_per_mm;
+                if (speed >= 0)
+                {
+                    f_speed = (255.0 / speed) * (params.speed_in * params.steps_per_mm);
+                }
+
+                float f_acceleration = params.acceleration * params.steps_per_mm;
+                if (acceleration >= 0)
+                {
+                    f_acceleration = (255.0 / acceleration) * (params.acceleration * params.steps_per_mm);
+                }
+
                 stepper.disableOutputs();
-                stepper.setMaxSpeed(params.speed_in * params.steps_per_mm);
+                stepper.setAcceleration(f_acceleration);
+                stepper.setMaxSpeed(f_speed);
                 stepper.moveTo(position);
                 stepper.enableOutputs();
                 stage = MOVING_TO;
             }
+        }
+
+        Stage get_stage()
+        {
+            return stage;
         }
 
     private:

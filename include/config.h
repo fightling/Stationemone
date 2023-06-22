@@ -23,5 +23,23 @@ constexpr Artnet::Parameters paramsArtnet = {
     .ssid = SSID,
     .password = PASSWORD,
     .universe = 0,
-    .first = 0,
+    .first = 20,
+};
+
+enum LedId
+{
+    LED_WIFI = 0,
+    LED_MOVING = 1,
+    LED_MODE = 2,
+};
+
+constexpr Led::Parameters<3> paramsLed = {
+    .pins = {
+        // Wifi
+        33,
+        // Moving
+        25,
+        // Mode (auto=blink, artnet=on)
+        32,
+    },
 };

@@ -26,7 +26,7 @@ namespace Artnet
             s_params = &params;
         }
 
-        bool setup(void)
+        bool setup(void (*fn)())
         {
             bool state = true;
             int i = 0;
@@ -39,7 +39,7 @@ namespace Artnet
             Serial.print("Connecting");
             while (WiFi.status() != WL_CONNECTED)
             {
-                delay(500);
+                fn();
                 Serial.print(".");
                 if (i > 20)
                 {
