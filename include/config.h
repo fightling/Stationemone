@@ -11,8 +11,8 @@ constexpr Stepper::Parameters paramsStepper = {
     .max_speed = 1000.0,
     .acceleration = 200.0,
     .rms_current = 800,
-    .distance_mm = 21,
-    .steps_per_mm = 215,
+    .distance_mm = 22,
+    .steps_per_mm = 215 * 2,
     .pause_in = {5000, 10000}, // (min/max)
     .pause_out = {0, 30000},   //  (min/max)
     .speed_in = 800,
@@ -23,7 +23,7 @@ constexpr Artnet::Parameters paramsArtnet = {
     .ssid = SSID,
     .password = PASSWORD,
     .universe = 0,
-    .first = 20,
+    .first = 0,
 };
 
 enum LedId
