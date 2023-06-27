@@ -5,14 +5,22 @@
 #include <AccelStepper.h>
 #include <L298N.h>
 
-#define STEP_PIN 14 // Step slope
+#define STEP_PIN 14 // Step
 #define DIR_PIN 12  // Direction
 #define CS_PIN 5    // Chip select
-#define SW_MOSI 23  // Software Master Out Slave In (MOSI)
 #define SW_MISO 19  // Software Master In Slave Out (MISO)
 #define SW_SCK 18   // Software Slave Clock (SCK)
 
+#define EN_PIN 4            // Enable
+#define SW_RX 16            // Software Serial pins
+#define SW_TX 17            //
+#define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
+
 #define R_SENSE 0.11f // Match to your driver
+#define HOLD_MULTIPLIER \
+    0.5 // [0...1] A hold current multiplier. 1 means full current while
+        // standing still, 0 will disable holding completely and make the motor
+        // unhold position when not moving.
 
 namespace Stepper
 {
@@ -47,7 +55,7 @@ namespace Stepper
     struct Controller
     {
         Controller(const Parameters &params)
-            : driver(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK),
+            : driver(&Serial1, R_SENSE, DRIVER_ADDRESS),
               stepper(stepper.DRIVER, STEP_PIN, DIR_PIN),
               params(params),
               stage(MOVE_IN),
@@ -61,12 +69,12 @@ namespace Stepper
         {
             setPinMode(STEP_PIN, OUTPUT);
             setPinMode(DIR_PIN, OUTPUT);
+            setPinMode(EN_PIN, OUTPUT);
             setPinMode(SW_MISO, INPUT_PULLUP);
 
             driver.begin();                         //  SPI: Init CS pins and possible SW SPI pins
                                                     //  driver.push();
             driver.rms_current(params.rms_current); // Set motor RMS current
-            driver.en_pwm_mode(true);               // Toggle stealthChop on TMC2130/2160/5130/5160
             driver.pwm_autoscale(true);             // Needed for stealthChop
             driver.microsteps(16);                  // Set microsteps to 1/16th
 
@@ -196,7 +204,7 @@ namespace Stepper
 
     private:
         const Parameters &params;
-        TMC2130Stepper driver;
+        TMC2209Stepper driver;
         AccelStepper stepper;
         Stage stage;
         unsigned long until;
