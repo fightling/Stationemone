@@ -93,10 +93,26 @@ void loop()
 
     if (data[0] == Position && memcmp(last, data, sizeof(last)))
     {
+      /* Serial.print("set_pos ");
+      Serial.print(data[1]);
+      Serial.print(" ");
+      Serial.print(data[2]);
+      Serial.print(" ");
+      Serial.println(data[3]);
+      */
       stepper.set_position(data[1], data[2], data[3]);
     }
     memcpy(last, data, sizeof(last));
   }
+
+  if (!stepper.is_auto_mode() && !artnet.loop())
+  {
+    Serial.println("wifi off -> auto move");
+    stepper.auto_move();
+    leds.blink(LED_MODE);
+    leds.off(LED_WIFI);
+  }
+
   // set LEDs
 
   switch (stepper.get_stage())

@@ -3,6 +3,7 @@
 
 #include <TMCStepper.h>
 #include <AccelStepper.h>
+#include <L298N.h>
 
 #define STEP_PIN 14 // Step slope
 #define DIR_PIN 12  // Direction
@@ -50,7 +51,9 @@ namespace Stepper
               stepper(stepper.DRIVER, STEP_PIN, DIR_PIN),
               params(params),
               stage(MOVE_IN),
-              auto_mode(true)
+              auto_mode(true),
+              last_acceleration(0.0),
+              last_speed(0.0)
         {
         }
 
@@ -79,7 +82,13 @@ namespace Stepper
             {
             case MOVING_TO:
                 if (stepper.currentPosition() == position)
+                {
+                    Serial.print(millis() - start);
+                    Serial.println(" ms");
+                    ;
+
                     stage = HALT;
+                }
                 stepper.run();
                 break;
             case MOVE_IN:
@@ -135,29 +144,45 @@ namespace Stepper
         {
             auto_mode = false;
             stage = MOVE_OUT;
+            last_acceleration = 0.0;
+            last_speed = 0.0;
         }
 
-        void set_position(uint8_t pos, uint8_t speed, uint8_t acceleration)
+        bool is_auto_mode()
+        {
+            return auto_mode;
+        }
+
+        void set_position(uint8_t pos, uint8_t speed = 0, uint8_t acceleration = 0)
         {
             if (!auto_mode)
             {
-                position = params.distance_mm * params.steps_per_mm * (float)(255.0 - pos) / 255.0;
-
-                float f_speed = params.speed_in * params.steps_per_mm;
-                if (speed >= 0)
+                position = ((float)params.distance_mm * params.steps_per_mm) / 255.0 * (255.0 - pos);
+                float f_speed = (float)params.speed_in * params.steps_per_mm;
+                if (speed > 0)
                 {
-                    f_speed = (255.0 / speed) * (params.speed_in * params.steps_per_mm);
+                    f_speed = f_speed * (float)speed / 255.0;
                 }
 
                 float f_acceleration = params.acceleration * params.steps_per_mm;
-                if (acceleration >= 0)
+                if (acceleration > 0)
                 {
-                    f_acceleration = (255.0 / acceleration) * (params.acceleration * params.steps_per_mm);
+                    f_acceleration = f_acceleration * (float)acceleration / 255.0;
                 }
 
                 stepper.disableOutputs();
-                stepper.setAcceleration(f_acceleration);
-                stepper.setMaxSpeed(f_speed);
+                if (f_acceleration != last_acceleration)
+                {
+                    last_acceleration = f_acceleration;
+                    stepper.setAcceleration(f_acceleration);
+                }
+                if (last_speed != f_speed)
+                {
+                    last_speed = f_speed;
+                    stepper.setMaxSpeed(f_speed);
+                }
+
+                start = millis();
                 stepper.moveTo(position);
                 stepper.enableOutputs();
                 stage = MOVING_TO;
@@ -177,6 +202,9 @@ namespace Stepper
         unsigned long until;
         bool auto_mode;
         float position;
+        float last_acceleration;
+        float last_speed;
+        unsigned long start;
     };
 }
 

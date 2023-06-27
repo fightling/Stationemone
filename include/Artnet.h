@@ -17,7 +17,8 @@ namespace Artnet
     static bool new_data = false;
     static const Parameters *s_params = NULL;
     static uint8_t data[512];
-
+    static int16_t prev_sequence = -1;
+    static void (*fnConnecting)() = NULL;
     template <uint8_t DATA_LENGTH>
     struct Client
     {
@@ -30,6 +31,7 @@ namespace Artnet
         {
             bool state = true;
             int i = 0;
+            fnConnecting = fn;
 
             WiFi.begin(s_params->ssid, s_params->password);
             Serial.println("");
@@ -39,7 +41,7 @@ namespace Artnet
             Serial.print("Connecting");
             while (WiFi.status() != WL_CONNECTED)
             {
-                fn();
+                fnConnecting();
                 Serial.print(".");
                 if (i > 20)
                 {
@@ -68,6 +70,13 @@ namespace Artnet
             return state;
         }
 
+        bool loop()
+        {
+            if (WiFi.status() != WL_CONNECTED)
+                return setup(fnConnecting);
+            return true;
+        }
+
         uint8_t *get_data()
         {
             artnet.read();
@@ -82,7 +91,10 @@ namespace Artnet
     private:
         static void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *_data)
         {
-            if (universe == s_params->universe)
+            if (prev_sequence > 128 && sequence < 128)
+                prev_sequence = -1;
+
+            if (universe == s_params->universe && sequence > prev_sequence)
             {
                 assert(length == sizeof(data));
                 memcpy(data, _data, length);
